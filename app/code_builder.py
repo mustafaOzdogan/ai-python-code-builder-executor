@@ -2,17 +2,15 @@ import os
 import asyncio
 
 from dotenv import load_dotenv
-from app.termination_conditions import (
-    is_executor_result_successful, MaxExecutionFailuresTermination,
+from termination_conditions import (
+    is_executor_result_successful,
+    MaxExecutionFailuresTermination
 )
 from autogen_agentchat.agents import (
-    ApprovalRequest,
-    ApprovalResponse,
-    AssistantAgent,
-    # UserProxyAgent,
-    CodeExecutorAgent,
+    ApprovalRequest, ApprovalResponse,
+    AssistantAgent, CodeExecutorAgent
 )
-from autogen_agentchat.ui import Console
+from autogen_agentchat.messages import StopMessage
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import FunctionalTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
@@ -23,13 +21,24 @@ load_dotenv()
 
 
 def approval_func(request: ApprovalRequest) -> ApprovalResponse:
-    print("\n" + "=" * 60)
-    print("CODE EXECUTION APPROVAL")
+    print()
     print("=" * 60)
-
+    print("                 CODE EXECUTION APPROVAL")
+    print("=" * 60)
+    print()
+    print("The following code is ready for execution:")
+    print()
+    print("-" * 60)
     print(request.code)
+    print("-" * 60)
+    print()
+    print("Execute this code?")
+    print()
+    print("[y] Yes, execute")
+    print("[n] No, reject")
+    print()
 
-    answer = input("\nExecute this code? (y/n): ").strip().lower()
+    answer = input("Your choice: ").strip().lower()
 
     if answer == "y":
         return ApprovalResponse(

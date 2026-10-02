@@ -69,12 +69,6 @@ class MaxExecutionFailuresTermination(TerminationCondition):
 
         self.failed_execution_count += 1
 
-        print(
-            f"\n[Execution failed: "
-            f"{self.failed_execution_count}/"
-            f"{self.max_failed_executions}]"
-        )
-
         if self.failed_execution_count >= self.max_failed_executions:
             self._terminated = True
 
