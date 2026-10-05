@@ -97,7 +97,7 @@ async def main():
 
     # Code executor
     code_executor = DockerCommandLineCodeExecutor(
-        work_dir="working"
+        work_dir=CODE_WORK_DIR
     )
 
     # Docker container'ı başlat
@@ -114,7 +114,7 @@ async def main():
         is_executor_result_successful
     )
     max_failures_termination = MaxExecutionFailuresTermination(
-        max_failed_executions=3
+        max_failed_executions=MAX_FAILED_EXECUTIONS
     )
     termination = (
         successful_execution | max_failures_termination 
@@ -124,7 +124,7 @@ async def main():
     team = RoundRobinGroupChat(
         [assistant, executor],
         termination_condition=termination,
-        max_turns=12,
+        max_turns=MAX_TURNS
     )
 
     try:
