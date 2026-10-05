@@ -117,7 +117,7 @@ async def main():
         max_failed_executions=MAX_FAILED_EXECUTIONS
     )
     termination = (
-        successful_execution | max_failures_termination 
+        successful_execution | max_failures_termination
     )
 
     # Orchestrate the conversation
