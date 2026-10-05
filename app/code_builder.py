@@ -60,8 +60,8 @@ def approval_func(request: ApprovalRequest) -> ApprovalResponse:
 async def main():
     # OpenAI model client
     model_client = OpenAIChatCompletionClient(
-            model="gpt-4o-mini",
-            api_key=os.getenv("OPENAI_API_KEY"),
+            model=OPENAI_MODEL,
+            api_key=OPENAI_API_KEY,
         )
 
     # Agent that uses the LLM
