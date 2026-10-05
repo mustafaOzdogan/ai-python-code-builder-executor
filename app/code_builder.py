@@ -128,6 +128,11 @@ async def main():
     )
 
     try:
+        print()
+        print("=" * 60)
+        print("              AI PYTHON CODE BUILDER")
+        print("=" * 60)
+
         user_request = input(
             "\nWhat Python program would you like to build?\n> "
         )
