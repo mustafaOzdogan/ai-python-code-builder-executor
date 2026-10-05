@@ -131,12 +131,71 @@ async def main():
         user_request = input(
             "\nWhat Python program would you like to build?\n> "
         )
+
         # Run the conversation and stream the messages
-        await Console(
-            team.run_stream(
-                task=user_request,
-            )
-        )
+        stream = team.run_stream(task=user_request)
+
+        first_assistant_message = True
+
+        async for message in stream:
+
+            if isinstance(message, TaskResult):
+                if message.stop_reason:
+                    print()
+                    print("=" * 60)
+                    print("                    TERMINATION")
+                    print("=" * 60)
+                    print()
+                    print(message.stop_reason)
+                    print()
+                continue
+
+            # Ignore user message.
+            if message.source == "user":
+                continue
+
+            # Assistant message
+            if message.source == "assistant":
+
+                if first_assistant_message:
+                    print()
+                    print("ASSISTANT")
+                    print("-" * 60)
+                    print("Generated Python code is ready for review.")
+                    first_assistant_message = False
+                else:
+                    print()
+                    print("ASSISTANT")
+                    print("-" * 60)
+                    print("Generated corrected Python code is ready for review.")
+
+                continue
+
+            # Executor message
+            if message.source == "executor":
+                print()
+                print("EXECUTOR")
+                print("-" * 60)
+                print(message.content)
+
+                # Execution failure logging
+                if (
+                    isinstance(message.content, str)
+                    and "exited with an error" in message.content
+                ):
+                    failure_count = (
+                        max_failures_termination.failed_execution_count + 1
+                    )
+
+                    print()
+                    print("-" * 60)
+                    print(
+                        f"EXECUTION FAILURE: "
+                        f"{failure_count}/"
+                        f"{max_failures_termination.max_failed_executions}"
+                    )
+                    print("-" * 60)
+
     finally:
         await code_executor.stop()
         await model_client.close()
