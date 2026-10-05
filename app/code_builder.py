@@ -1,7 +1,15 @@
-import os
 import asyncio
 
-from dotenv import load_dotenv
+from config import (
+    CODE_PREVIEW_HEAD_LINES,
+    CODE_PREVIEW_MAX_LINES,
+    CODE_PREVIEW_TAIL_LINES,
+    CODE_WORK_DIR,
+    MAX_FAILED_EXECUTIONS,
+    MAX_TURNS,
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
+)
 from termination_conditions import (
     is_executor_result_successful,
     MaxExecutionFailuresTermination
@@ -15,9 +23,6 @@ from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import FunctionalTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
-
-
-load_dotenv()
 
 
 def approval_func(request: ApprovalRequest) -> ApprovalResponse:
