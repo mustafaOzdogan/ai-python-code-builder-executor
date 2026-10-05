@@ -46,10 +46,18 @@ def approval_func(request: ApprovalRequest) -> ApprovalResponse:
     answer = input("Your choice: ").strip().lower()
 
     if answer == "y":
+        print()
+        print("[APPROVED] Code execution authorized.")
+        print()
+
         return ApprovalResponse(
             approved=True,
             reason="User approved the code execution.",
         )
+
+    print()
+    print("[REJECTED] Code execution denied.")
+    print("-" * 60)
 
     return ApprovalResponse(
         approved=False,
