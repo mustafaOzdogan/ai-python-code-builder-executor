@@ -10,10 +10,12 @@ from config import (
     OPENAI_API_KEY,
     OPENAI_MODEL,
 )
+from prompts import PYTHON_ASSISTANT_SYSTEM_MESSAGE
 from termination_conditions import (
     is_executor_result_successful,
     MaxExecutionFailuresTermination
 )
+
 from autogen_agentchat.agents import (
     ApprovalRequest, ApprovalResponse,
     AssistantAgent, CodeExecutorAgent
@@ -76,25 +78,7 @@ async def main():
     assistant = AssistantAgent(
             name="assistant",
             model_client=model_client,
-            system_message=(
-                "You are a Python coding assistant. "
-                "Your job is to build and execute Python programs "
-                "based on the user's request. "
-
-                "When the user provides a request, generate executable "
-                "Python code inside a ```python code block. "
-
-                "When the executor reports an execution error, "
-                "analyze the error, fix the Python code, and provide "
-                "the corrected code inside a ```python code block. "
-
-                "Do not merely explain the error. "
-                "Always provide corrected executable code when an "
-                "execution error occurs. "
-
-                "Do not claim that code was executed unless you "
-                "receive the execution result from the executor."
-            ),
+            system_message=PYTHON_ASSISTANT_SYSTEM_MESSAGE
         )
 
     # Agent that represents the user
@@ -180,7 +164,10 @@ async def main():
                     print()
                     print("ASSISTANT")
                     print("-" * 60)
-                    print("Generated corrected Python code is ready for review.")
+                    print(
+                        "Generated corrected Python code is ready "
+                        "for review."
+                    )
 
                 continue
 
