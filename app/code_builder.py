@@ -67,44 +67,36 @@ def print_code_preview(code: str) -> None:
     print(f"Total lines: {total_lines}")
 
 
-def approval_func(request: ApprovalRequest) -> ApprovalResponse:
-    print()
-    print("=" * 60)
-    print("                 CODE EXECUTION APPROVAL")
-    print("=" * 60)
-    print()
-    print("The following code is ready for execution:")
-    print()
-    print("-" * 60)
-    print(request.code)
-    print("-" * 60)
-    print()
+def approval_func(request):
+    """
+    Ask the human user for permission before executing code.
+    """
+
+    print_code_preview(request.code)
+
     print("Execute this code?")
     print()
     print("[y] Yes, execute")
     print("[n] No, reject")
-    print()
 
-    answer = input("Your choice: ").strip().lower()
+    while True:
+        choice = input("\nYour choice: ").strip().lower()
 
-    if answer == "y":
-        print()
-        print("[APPROVED] Code execution authorized.")
-        print()
+        if choice == "y":
+            print("[APPROVED] Code execution authorized.")
+            return ApprovalResponse(
+                approved=True,
+                reason="User approved the code execution.",
+            )
 
-        return ApprovalResponse(
-            approved=True,
-            reason="User approved the code execution.",
-        )
+        if choice == "n":
+            print("[REJECTED] Code execution denied.")
+            return ApprovalResponse(
+                approved=False,
+                reason="User rejected the code execution.",
+            )
 
-    print()
-    print("[REJECTED] Code execution denied.")
-    print("-" * 60)
-
-    return ApprovalResponse(
-        approved=False,
-        reason="User rejected the code execution.",
-    )
+        print("Please enter 'y' or 'n'.")
 
 
 async def main():
