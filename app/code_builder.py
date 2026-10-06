@@ -27,6 +27,46 @@ from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 
 
+def print_code_preview(code: str) -> None:
+    """
+    Display generated code for human approval.
+
+    Large code blocks are truncated for readability,
+    while the complete code is still passed to the executor.
+    """
+
+    lines = code.splitlines()
+    total_lines = len(lines)
+
+    print("\n" + "=" * 60)
+    print(" CODE EXECUTION APPROVAL")
+    print("=" * 60)
+    print("\nGenerated Python code:")
+    print("-" * 60)
+
+    if total_lines <= CODE_PREVIEW_MAX_LINES:
+        print(code)
+    else:
+        for line in lines[:CODE_PREVIEW_HEAD_LINES]:
+            print(line)
+
+        hidden_lines = (
+            total_lines
+            - CODE_PREVIEW_HEAD_LINES
+            - CODE_PREVIEW_TAIL_LINES
+        )
+
+        print(
+            f"\n... [{hidden_lines} lines hidden] ...\n"
+        )
+
+        for line in lines[-CODE_PREVIEW_TAIL_LINES:]: 
+            print(line)
+
+    print("-" * 60)
+    print(f"Total lines: {total_lines}")
+
+
 def approval_func(request: ApprovalRequest) -> ApprovalResponse:
     print()
     print("=" * 60)
