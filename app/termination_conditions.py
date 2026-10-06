@@ -45,7 +45,7 @@ def is_executor_result_successful(
 
     last_message = messages[-1]
 
-    if getattr(last_message, "source", None) != "executor": 
+    if getattr(last_message, "source", None) != "executor":
         return False
 
     return not is_executor_error(last_message)
@@ -84,7 +84,7 @@ class MaxExecutionFailuresTermination(TerminationCondition):
 
         last_message = messages[-1]
 
-        if not is_executor_error(last_message): 
+        if not is_executor_error(last_message):
             return None
 
         self.failed_execution_count += 1
