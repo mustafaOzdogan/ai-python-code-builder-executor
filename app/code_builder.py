@@ -12,15 +12,15 @@ from config import (
 )
 from prompts import PYTHON_ASSISTANT_SYSTEM_MESSAGE
 from termination_conditions import (
-    is_executor_result_successful,
+    is_executor_error, is_executor_result_successful,
     MaxExecutionFailuresTermination
 )
 
 from autogen_agentchat.agents import (
-    ApprovalRequest, ApprovalResponse,
+    ApprovalResponse,
     AssistantAgent, CodeExecutorAgent
 )
-from autogen_agentchat.messages import StopMessage
+from autogen_agentchat.base import TaskResult
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import FunctionalTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient
@@ -60,7 +60,7 @@ def print_code_preview(code: str) -> None:
             f"\n... [{hidden_lines} lines hidden] ...\n"
         )
 
-        for line in lines[-CODE_PREVIEW_TAIL_LINES:]: 
+        for line in lines[-CODE_PREVIEW_TAIL_LINES:]:
             print(line)
 
     print("-" * 60)
@@ -100,7 +100,12 @@ def approval_func(request):
 
 
 async def main():
-    # OpenAI model client
+
+    if not OPENAI_API_KEY:
+        raise ValueError(
+            "OPENAI_API_KEY is not configured."
+        )
+
     model_client = OpenAIChatCompletionClient(
             model=OPENAI_MODEL,
             api_key=OPENAI_API_KEY,
