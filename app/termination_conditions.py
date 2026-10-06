@@ -1,23 +1,26 @@
-from typing import Sequence
+from collections.abc import Sequence
+
 from autogen_agentchat.base import (
-    TerminationCondition, TerminatedException,
+    BaseAgentEvent,
+    BaseChatMessage,
+    TerminatedException,
+    TerminationCondition,
 )
-from autogen_agentchat.messages import (
-    BaseChatMessage, StopMessage, BaseAgentEvent
-)
+from autogen_agentchat.messages import StopMessage
 
 
 def is_executor_error(
-    message: BaseAgentEvent | BaseChatMessage
+    message: BaseAgentEvent | BaseChatMessage,
 ) -> bool:
-    """ Determine whether the executor message represents
-    a failed code execution
+    """
+    Determine whether an executor message represents
+    a failed code execution.
 
     In AutoGen 0.7.5, when CodeExecutorAgent is used
     without a model_client, the execution result is
     exposed as a TextMessage.
 
-    Therefore, for this PoC, we detect execution failure
+    Therefore, this PoC detects execution failures
     from the executor's output message.
     """
 
@@ -33,7 +36,7 @@ def is_executor_error(
 
 
 def is_executor_result_successful(
-    messages: Sequence[BaseAgentEvent | BaseChatMessage]
+    messages: Sequence[BaseAgentEvent | BaseChatMessage],
 ) -> bool:
     """
     Return True when the latest executor result
@@ -53,7 +56,8 @@ def is_executor_result_successful(
 
 class MaxExecutionFailuresTermination(TerminationCondition):
     """
-    Stop the team after too many failed code executions.
+    Stop the team after the maximum number of failed
+    code executions is reached.
     """
 
     def __init__(self, max_failed_executions: int = 3) -> None:
