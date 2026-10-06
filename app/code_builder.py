@@ -129,9 +129,6 @@ async def main():
         work_dir=CODE_WORK_DIR
     )
 
-    # Docker container'ı başlat
-    await code_executor.start()
-
     # Agent responsible for executing Python code
     executor = CodeExecutorAgent(
         name="executor",
@@ -156,23 +153,27 @@ async def main():
         max_turns=MAX_TURNS
     )
 
+    print("\n" + "=" * 60)
+    print("              AI PYTHON CODE BUILDER")
+    print("=" * 60)
+
+    print("\nWhat Python program would you like to build?")
+
+    user_request = input("> ").strip()
+
+    if not user_request:
+        print("\nNo request provided.")
+        return
+
+    # Docker container'ı başlat
+    await code_executor.start()
+
     try:
-        print()
-        print("=" * 60)
-        print("              AI PYTHON CODE BUILDER")
-        print("=" * 60)
-
-        user_request = input(
-            "\nWhat Python program would you like to build?\n> "
-        )
-
         # Run the conversation and stream the messages
         stream = team.run_stream(task=user_request)
-
-        first_assistant_message = True
+        assistant_code_attempt = 0
 
         async for message in stream:
-
             if isinstance(message, TaskResult):
                 if message.stop_reason:
                     print()
@@ -180,59 +181,65 @@ async def main():
                     print("                    TERMINATION")
                     print("=" * 60)
                     print()
-                    print(message.stop_reason)
+
+                    if "Functional termination" in message.stop_reason:
+                        print("Code execution completed successfully.")
+                    else:
+                        print(message.stop_reason)
+
                     print()
                 continue
 
+            source = getattr(message, "source", None)
+            content = getattr(message, "content", None)
+
             # Ignore user message.
-            if message.source == "user":
+            if source == "user":
                 continue
 
             # Assistant message
-            if message.source == "assistant":
-
-                if first_assistant_message:
-                    print()
-                    print("ASSISTANT")
-                    print("-" * 60)
-                    print("Generated Python code is ready for review.")
-                    first_assistant_message = False
-                else:
-                    print()
-                    print("ASSISTANT")
-                    print("-" * 60)
-                    print(
-                        "Generated corrected Python code is ready "
-                        "for review."
-                    )
-
-                continue
-
-            # Executor message
-            if message.source == "executor":
-                print()
-                print("EXECUTOR")
+            if source == "assistant":
+                print("\nASSISTANT")
                 print("-" * 60)
-                print(message.content)
 
-                # Execution failure logging
-                if (
-                    isinstance(message.content, str)
-                    and "exited with an error" in message.content
-                ):
+                if isinstance(content, str):
+                    if "```python" in content:
+                        assistant_code_attempt += 1
+
+                        if assistant_code_attempt == 1:
+                            print(
+                                "Initial Python code is ready for review."
+                            )
+                        else:
+                            retry_number = assistant_code_attempt - 1
+                            print(
+                                f"Retry #{retry_number}: "
+                                "Corrected Python code is ready for review."
+                            )
+                    else:
+                        print(content)
+
+            elif source == "executor":
+                if not isinstance(content, str):
+                    continue
+
+                if is_executor_error(message):
                     failure_count = (
                         max_failures_termination.failed_execution_count + 1
                     )
 
-                    print()
+                    print("\nEXECUTOR")
                     print("-" * 60)
                     print(
-                        f"EXECUTION FAILURE: "
-                        f"{failure_count}/"
-                        f"{max_failures_termination.max_failed_executions}"
+                        f"Execution failed "
+                        f"({failure_count}/{MAX_FAILED_EXECUTIONS})"
                     )
-                    print("-" * 60)
+                    print(content)
 
+                else:
+                    print("\nEXECUTOR")
+                    print("-" * 60)
+                    print(content)
     finally:
         await code_executor.stop()
         await model_client.close()
