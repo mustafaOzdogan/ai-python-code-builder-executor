@@ -10,8 +10,6 @@ The user describes a Python task in natural language. An AI assistant generates 
 
 If execution fails, the assistant analyzes the error and generates corrected code. **Every newly generated or corrected code version requires fresh human approval before execution.**
 
----
-
 ## Features
 
 * 🤖 AI-generated Python code from natural-language tasks
@@ -22,8 +20,6 @@ If execution fails, the assistant analyzes the error and generates corrected cod
 * 🧩 AutoGen `RoundRobinGroupChat` orchestration
 * ⚙️ Configurable execution and retry limits
 * 🧪 Unit tests for custom termination logic
-
----
 
 ## Architecture
 
@@ -78,8 +74,6 @@ If execution fails, the assistant analyzes the error and generates corrected cod
 ```
 
 The workflow is orchestrated using AutoGen's `RoundRobinGroupChat`.
-
----
 
 ## Workflow
 
@@ -191,8 +185,6 @@ Docker execution
 
 This ensures that every AI-generated execution attempt is explicitly reviewed.
 
----
-
 ## Failure Limit
 
 The workflow allows a maximum of **3 failed executions** by default.
@@ -230,8 +222,6 @@ The two limits have different responsibilities:
 | ----------------------- | --------------------------------- |
 | `MAX_FAILED_EXECUTIONS` | Workflow/business rule            |
 | `MAX_TURNS`             | Overall conversation safety limit |
-
----
 
 # Human-in-the-Loop
 
@@ -283,8 +273,6 @@ Assistant → continues reasoning
 
 This project deliberately keeps human interaction as an **execution approval gate**.
 
----
-
 # Why `CodeExecutorAgent` Has No Model Client
 
 The executor is intentionally created without a model client:
@@ -310,8 +298,6 @@ The assistant owns all LLM-based reasoning.
 The executor owns execution.
 
 Giving the executor its own LLM would duplicate the code-generation responsibility and make the workflow harder to reason about.
-
----
 
 # AutoGen 0.7.5 Execution Result Handling
 
@@ -372,8 +358,6 @@ timeout
 
 That would justify introducing a custom executor or a more event-driven execution architecture.
 
----
-
 # Termination Strategy
 
 The project uses two termination conditions.
@@ -421,8 +405,6 @@ Execution ───┤
                               └── maximum → STOP
 ```
 
----
-
 # Security Model
 
 The project deliberately separates **code generation** from **code execution**.
@@ -458,8 +440,6 @@ For production use, additional controls may be required, such as:
 * execution timeouts
 * seccomp/AppArmor policies
 * dedicated sandbox infrastructure
-
----
 
 # Project Structure
 
@@ -522,8 +502,6 @@ Contains unit tests for the custom termination logic.
 
 Working directory used by the Docker code executor.
 
----
-
 # Configuration
 
 Configuration is stored in `.env`.
@@ -548,8 +526,6 @@ Do not commit `.env` to Git.
 
 Use `.env.example` as the template for other developers.
 
----
-
 # Requirements
 
 * Python 3.14+
@@ -564,8 +540,6 @@ autogen-agentchat==0.7.5
 autogen-ext[openai,docker]==0.7.5
 python-dotenv==1.2.3
 ```
-
----
 
 # Installation
 
@@ -614,8 +588,6 @@ Verify Docker:
 docker run hello-world
 ```
 
----
-
 # Running the Application
 
 From the project root:
@@ -645,8 +617,6 @@ Create a Python program that calculates the factorial of 10.
 
 The assistant generates the code and waits for human approval before execution.
 
----
-
 # Testing
 
 Run the test suite with:
@@ -656,8 +626,6 @@ python -m pytest
 ```
 
 The tests cover the custom execution-failure termination logic.
-
----
 
 # Example: Successful Correction
 
@@ -697,8 +665,6 @@ STOP
 
 The important property is that the corrected code requires **another approval**.
 
----
-
 # Design Principles
 
 ### 1. One responsibility per agent
@@ -726,8 +692,6 @@ The workflow stops after:
 ### 5. Minimal abstraction
 
 The project avoids introducing additional agents or custom infrastructure unless the current requirements actually need them.
-
----
 
 # Future Improvements
 
@@ -773,8 +737,6 @@ A possible future architecture could be:
                       ▼
                   Human Review
 ```
-
----
 
 # License
 
