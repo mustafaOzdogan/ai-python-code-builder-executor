@@ -1,8 +1,8 @@
 # AI Python Code Builder & Executor
 
-> Human-in-the-loop AI Python code generation and execution with Docker isolation, automatic error correction, and bounded retries.
+Human-in-the-loop AI Python code generation and execution with Docker isolation, automatic error correction, and bounded retries.
 
-**Generate → Review → Execute → Fix → Review → Execute**
+> **Generate → Review → Execute → Fix → Review → Execute**
 
 A controlled Python code-generation workflow built with **Microsoft AutoGen**, **OpenAI**, and **Docker**.
 
