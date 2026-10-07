@@ -1,10 +1,27 @@
 # AI Python Code Builder & Executor
 
-A human-in-the-loop Python code generation and execution workflow built with **Microsoft AutoGen**, **OpenAI**, and **Docker**.
+> Human-in-the-loop AI Python code generation and execution with Docker isolation, automatic error correction, and bounded retries.
 
-The user describes a Python task in natural language. An AI assistant generates the Python code, the user reviews and approves it, and the approved code is executed inside an isolated Docker container.
+**Generate → Review → Execute → Fix → Review → Execute**
 
-If execution fails, the assistant analyzes the execution error and generates a corrected version. **Every new or corrected code version requires fresh human approval before execution.**
+A controlled Python code-generation workflow built with **Microsoft AutoGen**, **OpenAI**, and **Docker**.
+
+The user describes a Python task in natural language. An AI assistant generates the code, the user reviews and approves it, and the approved code is executed inside a Docker container.
+
+If execution fails, the assistant analyzes the error and generates corrected code. **Every newly generated or corrected code version requires fresh human approval before execution.**
+
+---
+
+## Features
+
+* 🤖 AI-generated Python code from natural-language tasks
+* 👤 Human approval before every execution
+* 🐳 Docker-isolated code execution
+* 🔄 Automatic error analysis and code correction
+* 🛑 Maximum failed-execution limit
+* 🧩 AutoGen `RoundRobinGroupChat` orchestration
+* ⚙️ Configurable execution and retry limits
+* 🧪 Unit tests for custom termination logic
 
 ---
 
@@ -32,13 +49,13 @@ If execution fails, the assistant analyzes the execution error and generates a c
                   │ [n] Reject       │
                   └────────┬─────────┘
                            │
-                     approved
+                       approved
                            │
                            ▼
                   ┌──────────────────┐
                   │ CodeExecutorAgent│
                   │                  │
-                  │ approval gate    │
+                  │ Approval gate    │
                   │ + Docker         │
                   └────────┬─────────┘
                            │
@@ -54,10 +71,13 @@ If execution fails, the assistant analyzes the execution error and generates a c
                                      │
                                      │ corrected code
                                      ▼
-                              approval_func()
+                              Human approval
+                                     │
+                                     ▼
+                              Docker execution
 ```
 
-The workflow is implemented using `RoundRobinGroupChat`.
+The workflow is orchestrated using AutoGen's `RoundRobinGroupChat`.
 
 ---
 
@@ -88,7 +108,7 @@ print(factorial(number))
 
 ### 3. Human reviews the code
 
-Before execution, the complete code is available to the executor, while the CLI shows a readable preview.
+Before execution, the user sees a code preview and explicitly approves or rejects the execution.
 
 ```text
 ============================================================
@@ -116,13 +136,13 @@ Execute this code?
 Your choice:
 ```
 
-The human must explicitly approve the execution.
+Large generated programs are truncated in the CLI preview for readability, while the complete code is passed to the executor.
 
-### 4. Code executes inside Docker
+### 4. Approved code executes inside Docker
 
 Approved code is executed by `CodeExecutorAgent` using `DockerCommandLineCodeExecutor`.
 
-The Python process therefore does not execute directly on the host machine.
+The code therefore runs inside a Docker container rather than directly in the application's host Python process.
 
 ### 5. Successful execution
 
@@ -142,7 +162,7 @@ Code execution completed successfully.
 
 ### 6. Failed execution
 
-If execution fails, the error is returned to the assistant.
+If execution fails, the executor returns the error to the assistant.
 
 For example:
 
@@ -154,28 +174,28 @@ The assistant analyzes the error and generates corrected code.
 
 The corrected code is **not automatically executed**.
 
-It goes through the human approval step again:
+It must pass through the human approval step again:
 
 ```text
 Assistant
-   │
-   ▼
+    │
+    ▼
 Corrected code
-   │
-   ▼
+    │
+    ▼
 Human approval
-   │
-   ▼
+    │
+    ▼
 Docker execution
 ```
 
-This prevents an AI-generated correction from being executed without human review.
+This ensures that every AI-generated execution attempt is explicitly reviewed.
 
 ---
 
 ## Failure Limit
 
-The workflow allows a maximum of **3 failed executions**.
+The workflow allows a maximum of **3 failed executions** by default.
 
 ```text
 Execution #1 → failed
@@ -200,14 +220,16 @@ Execution failed (3/3)
 Maximum failed execution count reached: 3.
 ```
 
-This protects the workflow from entering an endless correction loop.
+This prevents an endless correction loop.
 
-`MAX_TURNS` is also configured as a final workflow safety ceiling.
+`MAX_TURNS` provides an additional final safety ceiling for the overall AutoGen conversation.
 
-These two limits have different responsibilities:
+The two limits have different responsibilities:
 
-* `MAX_FAILED_EXECUTIONS` → business/workflow rule
-* `MAX_TURNS` → final conversation safety limit
+| Limit                   | Responsibility                    |
+| ----------------------- | --------------------------------- |
+| `MAX_FAILED_EXECUTIONS` | Workflow/business rule            |
+| `MAX_TURNS`             | Overall conversation safety limit |
 
 ---
 
@@ -230,34 +252,32 @@ def approval_func(request) -> ApprovalResponse:
     ...
 ```
 
-The user can either:
+The user can explicitly approve or reject:
 
 ```text
 [y] Yes, execute
 [n] No, reject
 ```
 
-The approval decision is explicit.
+No generated or corrected code is executed without approval.
 
 ### Why not `UserProxyAgent`?
 
 `UserProxyAgent` can be used for human interaction in AutoGen, but it is not necessary for this workflow.
 
-The human is not acting as another conversational agent.
-
-The human has one specific responsibility:
+The human is not acting as another conversational agent. The human has one specific responsibility:
 
 > Approve or reject code execution.
 
-Therefore, `approval_func` provides a simpler and more precise abstraction for this use case.
+Therefore, `approval_func` provides a simpler and more precise abstraction.
 
 `UserProxyAgent` would make more sense if the human needed to participate in the conversation itself, for example:
 
 ```text
 Assistant → asks clarification
-             ↓
-          Human answer
-             ↓
+              ↓
+           Human answer
+              ↓
 Assistant → continues reasoning
 ```
 
@@ -277,36 +297,17 @@ executor = CodeExecutorAgent(
 )
 ```
 
-The `AssistantAgent` is responsible for:
+The responsibilities are deliberately separated:
 
-* generating code
-* analyzing execution errors
-* fixing code
+| Component           | Responsibility               |
+| ------------------- | ---------------------------- |
+| `AssistantAgent`    | Generate and fix Python code |
+| `CodeExecutorAgent` | Approval and code execution  |
+| Docker              | Execution isolation          |
 
-The `CodeExecutorAgent` is responsible for:
+The assistant owns all LLM-based reasoning.
 
-* receiving code
-* requesting human approval
-* executing approved code
-* returning the execution result
-
-This creates a clear separation of responsibilities:
-
-```text
-AssistantAgent
-    │
-    ├── Generate
-    └── Fix
-         │
-         ▼
-CodeExecutorAgent
-    │
-    ├── Approve
-    └── Execute
-         │
-         ▼
-      Docker
-```
+The executor owns execution.
 
 Giving the executor its own LLM would duplicate the code-generation responsibility and make the workflow harder to reason about.
 
@@ -333,29 +334,27 @@ def is_executor_error(message) -> bool:
     ...
 ```
 
-The adapter identifies executor failures from the executor's output message.
+The adapter identifies execution failures from the executor's output message.
 
-This is intentionally kept small.
-
-The project does not introduce a custom executor simply to expose an exit code because that would add complexity without providing significant value for the current workflow.
-
-### Why this approach?
+### Why use this approach?
 
 The current workflow only needs to distinguish:
 
 ```text
-executor result
+Executor result
       │
       ├── success → STOP
       │
       └── failure → Assistant fixes code
 ```
 
-It does not currently need sophisticated routing based on individual exit codes.
+Introducing a custom executor solely to expose a structured exit code would add complexity without providing significant value for the current use case.
+
+This is a deliberate architectural trade-off.
 
 ### Future extension
 
-A more advanced architecture could use richer execution events and route different failures differently:
+A more advanced implementation could use richer execution events and route failures based on their type:
 
 ```text
 exit code 0
@@ -371,9 +370,7 @@ timeout
     → retry or abort
 ```
 
-That would be a good reason to introduce a custom executor or a more event-driven architecture.
-
-For this project, the simpler adapter is intentional.
+That would justify introducing a custom executor or a more event-driven execution architecture.
 
 ---
 
@@ -401,7 +398,7 @@ max_failures_termination = MaxExecutionFailuresTermination(
 
 The custom termination condition counts failed executions.
 
-The two conditions are combined:
+The conditions are combined:
 
 ```python
 termination = (
@@ -430,10 +427,6 @@ Execution ───┤
 
 The project deliberately separates **code generation** from **code execution**.
 
-Generated code is not executed directly on the host machine.
-
-Instead:
-
 ```text
 AI-generated Python
         │
@@ -449,18 +442,19 @@ Execution
 
 Docker provides an additional isolation boundary.
 
-However, Docker execution should not be considered an absolute security guarantee.
+However, Docker execution should **not** be considered an absolute security guarantee.
 
-The Docker configuration in this project is intended as a development/demo isolation mechanism, not as a hardened production sandbox for arbitrary hostile code.
+Human approval is a workflow control, not a substitute for sandboxing.
+
+This project is intended as a development and demonstration project, not as a hardened production sandbox for arbitrary hostile code.
 
 For production use, additional controls may be required, such as:
 
 * container resource limits
 * network restrictions
 * read-only filesystems
-* restricted mounts
 * non-root execution
-* CPU/memory limits
+* CPU and memory limits
 * execution timeouts
 * seccomp/AppArmor policies
 * dedicated sandbox infrastructure
@@ -491,7 +485,7 @@ ai-python-code-builder-executor/
 └── README.md
 ```
 
-### `code_builder.py`
+### `app/code_builder.py`
 
 Main application entry point.
 
@@ -504,21 +498,21 @@ Responsible for:
 * team configuration
 * streaming workflow execution
 
-### `config.py`
+### `app/config.py`
 
 Loads configuration from `.env`.
 
-### `prompts.py`
+### `app/prompts.py`
 
 Contains the system prompt used by the `AssistantAgent`.
 
-### `termination_conditions.py`
+### `app/termination_conditions.py`
 
 Contains:
 
 * executor error detection
 * successful execution detection
-* maximum failed execution termination
+* maximum failed-execution termination
 
 ### `tests/`
 
@@ -561,7 +555,7 @@ Use `.env.example` as the template for other developers.
 * Python 3.14+
 * Docker Desktop
 * OpenAI API key
-* Windows/macOS/Linux
+* Windows, macOS, or Linux
 
 The project currently uses:
 
@@ -578,7 +572,7 @@ python-dotenv==1.2.3
 Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/mustafaOzdogan/ai-python-code-builder-executor.git
 cd ai-python-code-builder-executor
 ```
 
@@ -600,7 +594,7 @@ Install dependencies:
 python -m pip install -r requirements.txt
 ```
 
-Create `.env`:
+Create `.env` from the example:
 
 ```powershell
 Copy-Item .env.example .env
@@ -630,7 +624,7 @@ From the project root:
 python .\app\code_builder.py
 ```
 
-The application asks:
+The application starts with:
 
 ```text
 ============================================================
@@ -653,9 +647,21 @@ The assistant generates the code and waits for human approval before execution.
 
 ---
 
+# Testing
+
+Run the test suite with:
+
+```powershell
+python -m pytest
+```
+
+The tests cover the custom execution-failure termination logic.
+
+---
+
 # Example: Successful Correction
 
-A possible workflow:
+A typical workflow looks like:
 
 ```text
 User
@@ -695,13 +701,11 @@ The important property is that the corrected code requires **another approval**.
 
 # Design Principles
 
-The project follows several simple principles:
-
 ### 1. One responsibility per agent
 
 `AssistantAgent` generates and fixes code.
 
-`CodeExecutorAgent` executes code.
+`CodeExecutorAgent` handles approval and execution.
 
 ### 2. Human approval before every execution
 
@@ -709,15 +713,15 @@ No generated or corrected code is automatically executed.
 
 ### 3. Execution is isolated
 
-Code runs inside Docker rather than directly on the host.
+Approved code runs inside Docker rather than directly in the application's host Python process.
 
 ### 4. Explicit termination
 
 The workflow stops after:
 
-* successful execution, or
-* maximum failed executions, or
-* the final `MAX_TURNS` safety limit.
+* successful execution
+* maximum failed executions
+* the final `MAX_TURNS` safety limit
 
 ### 5. Minimal abstraction
 
@@ -741,7 +745,7 @@ Possible future extensions include:
 * streaming code diffs between attempts
 * structured execution results
 * specialized debugging agents
-* code quality/static analysis before execution
+* static analysis before execution
 
 A possible future architecture could be:
 
