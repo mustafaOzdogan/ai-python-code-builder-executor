@@ -774,4 +774,4 @@ A possible future architecture could be:
 
 # License
 
-Add the appropriate license for the repository.
+This project is licensed under the MIT License.
