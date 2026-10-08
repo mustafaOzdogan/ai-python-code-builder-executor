@@ -6,7 +6,7 @@ A human-in-the-loop multi-agent workflow built with Microsoft AutoGen that gener
 
 This project demonstrates how AI-generated code can be combined with human-in-the-loop approval, sandboxed execution, and feedback-driven refinement.
 
-# Why This Project?
+## Why This Project?
 AI models can generate useful code, but generated code is not always correct, safe, or ready for execution.
 
 This project explores a controlled workflow where:
@@ -62,14 +62,16 @@ Reject     Approve
                         │
                         └──────► Generate Fix
 ```
-### Agent Responsibilities
 
-| Component           | Responsibility                  |
-| ------------------- | ------------------------------- |
-| `AssistantAgent`    | Generates and fixes Python code |
-| `approval_func`     | Human approval before execution |
-| `CodeExecutorAgent` | Executes approved code          |
-| Docker Container    | Isolated runtime environment    |
+## Agent Responsibilities
+
+| Component         | Responsibility                   |
+| ----------------- | -------------------------------- |
+| AssistantAgent    | Generate and correct Python code |
+| approval_func     | Human approval                   |
+| CodeExecutorAgent | Execute approved code            |
+| Docker            | Isolated execution environment   |
+| Termination Logic | Control workflow lifecycle       |
 
 ## Example Workflow
 
@@ -95,8 +97,8 @@ print(factorial(10))
 
 ### Human Approval
 Before execution, the user sees a code preview and explicitly approves or rejects the execution.
-Large generated programs are truncated in the CLI preview for readability, while the complete code is passed to the executor.
 
+Large generated programs are truncated in the CLI preview for readability, while the complete code is passed to the executor.
 
 ```text
 ============================================================
@@ -129,12 +131,6 @@ Approved code is executed by `CodeExecutorAgent` using `DockerCommandLineCodeExe
 
 The code therefore runs inside a Docker container rather than directly in the application's host Python process.
 
-### Error Handling
-
-### Termination
-
-
-
 ### 5. Successful Execution
 
 If execution succeeds, the workflow terminates.
@@ -150,6 +146,14 @@ EXECUTOR
 
 Code execution completed successfully.
 ```
+
+### Error Handling
+
+### Termination
+
+
+
+
 
 ### 6. Failed execution
 
