@@ -694,51 +694,6 @@ The workflow stops after:
 
 The project avoids introducing additional agents or custom infrastructure unless the current requirements actually need them.
 
-# Future Improvements
-
-Possible future extensions include:
-
-* automated unit-test generation
-* test execution before final success
-* richer execution-event handling
-* timeout detection
-* Docker resource limits
-* network isolation
-* execution history
-* persistent conversation state
-* Web UI instead of CLI
-* streaming code diffs between attempts
-* structured execution results
-* specialized debugging agents
-* static analysis before execution
-
-A possible future architecture could be:
-
-```text
-                    User
-                      │
-                      ▼
-                Code Generator
-                      │
-                      ▼
-                Human Approval
-                      │
-                      ▼
-                Code Executor
-                      │
-             ┌────────┴────────┐
-             │                 │
-          success            failure
-             │                 │
-             ▼                 ▼
-          Testing          Debugger
-             │                 │
-             └────────┬────────┘
-                      │
-                      ▼
-                  Human Review
-```
-
 ## Limitations
 
 * The workflow currently supports Python only
@@ -755,6 +710,6 @@ A possible future architecture could be:
 * Add web interface
 * Add advanced sandboxing
 
-# License
+## License
 
 This project is licensed under the MIT License.
