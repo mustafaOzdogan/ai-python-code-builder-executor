@@ -1,25 +1,36 @@
 # AI Python Code Builder & Executor
 
-Human-in-the-loop AI Python code generation and execution with Docker isolation, automatic error correction, and bounded retries.
+A human-in-the-loop multi-agent workflow built with Microsoft AutoGen that generates Python code, requires explicit human approval before execution, runs code inside an isolated Docker container, and automatically corrects failed executions.
 
 > **Generate → Review → Execute → Fix → Review → Execute**
 
-A controlled Python code-generation workflow built with **Microsoft AutoGen**, **OpenAI**, and **Docker**.
+This project demonstrates how AI-generated code can be combined with human-in-the-loop approval, sandboxed execution, and feedback-driven refinement.
 
-The user describes a Python task in natural language. An AI assistant generates the code, the user reviews and approves it, and the approved code is executed inside a Docker container.
+# Why This Project?
+AI models can generate useful code, but generated code is not always correct, safe, or ready for execution.
 
-If execution fails, the assistant analyzes the error and generates corrected code. **Every newly generated or corrected code version requires fresh human approval before execution.**
+This project explores a controlled workflow where:
 
-## Features
+* AI generates Python code
+* A human explicitly approves execution
+* Code runs inside Docker containers
+* Execution errors are analyzed
+* AI generates corrected versions
+* Every correction requires fresh approval
 
-* 🤖 AI-generated Python code from natural-language tasks
-* 👤 Human approval before every execution
-* 🐳 Docker-isolated code execution
-* 🔄 Automatic error analysis and code correction
-* 🛑 Maximum failed-execution limit
+The goal is not simply code generation, but designing an iterative execution workflow with validation and human oversight.
+
+## Key Features
+
+* 🤖 AI-powered Python code generation
+* 👨‍💻 Human-in-the-loop approval
+* 🐳 Docker-based sandboxed execution
+* 🔄 Automatic error correction
+* 🛑 Configurable retry limits
+* ⚡ Execution success detection
 * 🧩 AutoGen `RoundRobinGroupChat` orchestration
-* ⚙️ Configurable execution and retry limits
-* 🧪 Unit tests for custom termination logic
+* 🔒 Security-aware execution model
+* ✅ Unit tests
 
 ## Architecture
 
