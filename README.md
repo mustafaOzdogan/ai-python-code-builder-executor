@@ -35,34 +35,34 @@ The goal is not simply code generation, but designing an iterative execution wor
 ## Architecture
 
 ```text
-                User Request
-                      │
-                      ▼
-                AssistantAgent
-                (Code Generation)
-                      │
-                      ▼
-                approval_func
-                (Human Review)
-                      │
-                 ┌────┴────┐
-                 │         │
-                Reject    Approve
-                 │         │
-                 ▼         ▼
-                Stop   CodeExecutorAgent
-                              │
-                              ▼
-                       Docker Container
-                              │
-                      ┌───────┴────────┐
-                      │                │
-                   Success           Failure
-                      │                │
-                      ▼                ▼
-                    Finish     AssistantAgent
-                                     │
-                                     └──────► Generate Fix
+ User Request
+      │
+      ▼
+ AssistantAgent
+(Code Generation)
+      │
+      ▼
+ approval_func
+(Human Review)
+       │
+  ┌────┴────┐
+  │         │
+Reject     Approve
+  │            │
+  ▼            ▼
+ Stop   CodeExecutorAgent
+               │
+               ▼
+        Docker Container
+               │
+       ┌───────┴────────┐
+       │                │
+    Success           Failure
+       │                │
+       ▼                ▼
+     Finish     AssistantAgent
+                        │
+                        └──────► Generate Fix
 ```
 
 ## Workflow
