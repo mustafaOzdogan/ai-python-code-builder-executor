@@ -35,15 +35,13 @@ The goal is not simply code generation, but designing an iterative execution wor
 ## Architecture
 
 ```text
- User Request
-      │
-      ▼
+  User Request
+       │
+       ▼
  AssistantAgent
-(Code Generation)
-      │
-      ▼
+       │
+       ▼
  approval_func
-(Human Review)
        │
   ┌────┴────┐
   │         │
@@ -64,35 +62,41 @@ Reject     Approve
                         │
                         └──────► Generate Fix
 ```
+### Agent Responsibilities
 
-## Workflow
+| Component           | Responsibility                  |
+| ------------------- | ------------------------------- |
+| `AssistantAgent`    | Generates and fixes Python code |
+| `approval_func`     | Human approval before execution |
+| `CodeExecutorAgent` | Executes approved code          |
+| Docker Container    | Isolated runtime environment    |
 
-### 1. User provides a task
+## Example Workflow
 
-For example:
+### User Request
+The user provides a Python-related task.
 
 ```text
-Calculate the factorial of 10 and print the result.
+Write a Python function that calculates factorial.
 ```
 
-### 2. Assistant generates Python code
-
+### Code Generation
 The `AssistantAgent` generates executable Python code.
 
 ```python
-number = 10
-
 def factorial(n):
-    if n == 0:
-        return 1
-    return n * factorial(n - 1)
+    result = 1
+    for i in range(1, n + 1):
+        result *= i
+    return result
 
-print(factorial(number))
+print(factorial(10))
 ```
 
-### 3. Human reviews the code
-
+### Human Approval
 Before execution, the user sees a code preview and explicitly approves or rejects the execution.
+Large generated programs are truncated in the CLI preview for readability, while the complete code is passed to the executor.
+
 
 ```text
 ============================================================
@@ -120,15 +124,18 @@ Execute this code?
 Your choice:
 ```
 
-Large generated programs are truncated in the CLI preview for readability, while the complete code is passed to the executor.
-
-### 4. Approved code executes inside Docker
-
+### Code Execution
 Approved code is executed by `CodeExecutorAgent` using `DockerCommandLineCodeExecutor`.
 
 The code therefore runs inside a Docker container rather than directly in the application's host Python process.
 
-### 5. Successful execution
+### Error Handling
+
+### Termination
+
+
+
+### 5. Successful Execution
 
 If execution succeeds, the workflow terminates.
 
