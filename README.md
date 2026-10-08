@@ -172,7 +172,7 @@ Code execution completed successfully.
                     TERMINATION
 ============================================================
 
-
+Code execution was rejected by the user.
 ```
 * Maximum failure count is reached
 ```text
