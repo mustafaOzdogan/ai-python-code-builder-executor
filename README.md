@@ -618,16 +618,6 @@ Create a Python program that calculates the factorial of 10.
 
 The assistant generates the code and waits for human approval before execution.
 
-# Testing
-
-Run the test suite with:
-
-```powershell
-python -m pytest
-```
-
-The tests cover the custom execution-failure termination logic.
-
 # Example: Successful Correction
 
 A typical workflow looks like:
@@ -694,6 +684,75 @@ The workflow stops after:
 
 The project avoids introducing additional agents or custom infrastructure unless the current requirements actually need them.
 
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+OPENAI_API_KEY=your_api_key_here
+```
+
+Never commit your API key to GitHub.
+
+A `.env.example` file is provided for configuration reference:
+
+```env
+OPENAI_API_KEY=
+```
+
+## Installation
+
+Create a virtual environment and install the required dependencies.
+
+```bash
+python -m venv .venv
+```
+
+Activate the environment on Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Install the dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Running
+
+Start Docker Desktop.
+
+Run:
+
+```bash
+python app/main.py
+```
+
+# Testing
+
+Run the test suite with:
+
+```powershell
+python -m pytest
+```
+
+The tests cover the custom execution-failure termination logic.
+
+## Key Agentic AI Concepts
+
+* Multi-agent workflows
+* Human-in-the-loop AI
+* Tool calling
+* Docker sandboxing
+* Execution validation
+* Automatic correction
+* Feedback-driven refinement
+* Retry strategies
+* Termination conditions
+* Separation of concerns
+  
 ## Limitations
 
 * The workflow currently supports Python only
