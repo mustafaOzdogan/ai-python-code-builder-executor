@@ -158,9 +158,6 @@ Human approval is required again.
 ### Termination
 Workflow stops when:
 
-Execution succeeds
-
-
 * Execution succeeds:
 ```text
 ============================================================
