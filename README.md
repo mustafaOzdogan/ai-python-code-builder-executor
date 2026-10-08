@@ -459,49 +459,11 @@ ai-python-code-builder-executor/
 ├── working/
 │   └── .gitkeep
 │
-├── .env
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
-
-### `app/code_builder.py`
-
-Main application entry point.
-
-Responsible for:
-
-* model configuration
-* agent creation
-* Docker executor creation
-* human approval
-* team configuration
-* streaming workflow execution
-
-### `app/config.py`
-
-Loads configuration from `.env`.
-
-### `app/prompts.py`
-
-Contains the system prompt used by the `AssistantAgent`.
-
-### `app/termination_conditions.py`
-
-Contains:
-
-* executor error detection
-* successful execution detection
-* maximum failed-execution termination
-
-### `tests/`
-
-Contains unit tests for the custom termination logic.
-
-### `working/`
-
-Working directory used by the Docker code executor.
 
 # Configuration
 
@@ -527,60 +489,8 @@ Do not commit `.env` to Git.
 
 Use `.env.example` as the template for other developers.
 
-# Requirements
-
-* Python 3.14+
-* Docker Desktop
-* OpenAI API key
-* Windows, macOS, or Linux
-
-The project currently uses:
-
-```text
-autogen-agentchat==0.7.5
-autogen-ext[openai,docker]==0.7.5
-python-dotenv==1.2.3
-```
 
 # Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/mustafaOzdogan/ai-python-code-builder-executor.git
-cd ai-python-code-builder-executor
-```
-
-Create a virtual environment:
-
-```bash
-python -m venv .venv
-```
-
-Activate it on Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-Create `.env` from the example:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Add your OpenAI API key:
-
-```env
-OPENAI_API_KEY=your_api_key
-```
-
 Make sure Docker Desktop is running.
 
 Verify Docker:
