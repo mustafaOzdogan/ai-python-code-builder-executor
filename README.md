@@ -63,7 +63,7 @@ Reject     Approve
                         └──────► Generate Fix
 ```
 
-## Agent Responsibilities
+### Agent Responsibilities
 
 | Component         | Responsibility                   |
 | ----------------- | -------------------------------- |
@@ -131,60 +131,60 @@ Approved code is executed by `CodeExecutorAgent` using `DockerCommandLineCodeExe
 
 The code therefore runs inside a Docker container rather than directly in the application's host Python process.
 
-### 5. Successful Execution
+### Successful Execution
 
-If execution succeeds, the workflow terminates.
+If execution succeeds, the output is shown:
 
 ```text
 EXECUTOR
 ------------------------------------------------------------
 3628800
+```
 
+### Failed execution
+
+If execution fails:
+
+```text
+NameError: variable 'number' is not defined
+```
+
+The error is returned to `AssistantAgent`.
+
+The assistant generates corrected code.
+
+Human approval is required again.
+
+### Termination
+Workflow stops when:
+
+Execution succeeds
+
+
+* Execution succeeds:
+```text
 ============================================================
                     TERMINATION
 ============================================================
 
 Code execution completed successfully.
 ```
-
-### Error Handling
-
-### Termination
-
-
-
-
-
-### 6. Failed execution
-
-If execution fails, the executor returns the error to the assistant.
-
-For example:
-
+* User rejects execution
 ```text
-NameError: name 'number' is not defined
+============================================================
+                    TERMINATION
+============================================================
+
+
 ```
-
-The assistant analyzes the error and generates corrected code.
-
-The corrected code is **not automatically executed**.
-
-It must pass through the human approval step again:
-
+* Maximum failure count is reached
 ```text
-Assistant
-    │
-    ▼
-Corrected code
-    │
-    ▼
-Human approval
-    │
-    ▼
-Docker execution
-```
+============================================================
+                    TERMINATION
+============================================================
 
-This ensures that every AI-generated execution attempt is explicitly reviewed.
+Maximum failed execution count reached: 3.
+```
 
 ## Failure Limit
 
@@ -738,6 +738,22 @@ A possible future architecture could be:
                       ▼
                   Human Review
 ```
+
+## Limitations
+
+* The workflow currently supports Python only
+* Human approval is required
+* Generated code quality depends on the LLM
+* Docker is not a complete security boundary
+
+## Future Improvements
+
+* Support multiple programming languages
+* Add execution history
+* Add code quality evaluation
+* Support multiple LLM providers
+* Add web interface
+* Add advanced sandboxing
 
 # License
 
