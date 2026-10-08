@@ -35,56 +35,35 @@ The goal is not simply code generation, but designing an iterative execution wor
 ## Architecture
 
 ```text
-                         User
-                           │
-                           │ Natural-language task
-                           ▼
-                  ┌──────────────────┐
-                  │  AssistantAgent  │
-                  │                  │
-                  │ Generate Python  │
-                  │ Fix Python code  │
-                  └────────┬─────────┘
-                           │
-                           │ Generated code
-                           ▼
-                  ┌──────────────────┐
-                  │   approval_func  │
-                  │                  │
-                  │ Human review     │
-                  │ [y] Approve      │
-                  │ [n] Reject       │
-                  └────────┬─────────┘
-                           │
-                       approved
-                           │
-                           ▼
-                  ┌──────────────────┐
-                  │ CodeExecutorAgent│
-                  │                  │
-                  │ Approval gate    │
-                  │ + Docker         │
-                  └────────┬─────────┘
-                           │
-                           ▼
-                    Docker Container
-                           │
-                  ┌────────┴─────────┐
-                  │                  │
-               success             error
-                  │                  │
-                  ▼                  ▼
-                STOP          AssistantAgent
+                User Request
+                      │
+                      ▼
+                AssistantAgent
+                (Code Generation)
+                      │
+                      ▼
+                approval_func
+                (Human Review)
+                      │
+                 ┌────┴────┐
+                 │         │
+                Reject    Approve
+                 │         │
+                 ▼         ▼
+                Stop   CodeExecutorAgent
+                              │
+                              ▼
+                       Docker Container
+                              │
+                      ┌───────┴────────┐
+                      │                │
+                   Success           Failure
+                      │                │
+                      ▼                ▼
+                    Finish     AssistantAgent
                                      │
-                                     │ corrected code
-                                     ▼
-                              Human approval
-                                     │
-                                     ▼
-                              Docker execution
+                                     └──────► Generate Fix
 ```
-
-The workflow is orchestrated using AutoGen's `RoundRobinGroupChat`.
 
 ## Workflow
 
