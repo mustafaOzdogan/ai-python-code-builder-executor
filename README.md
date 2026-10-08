@@ -442,7 +442,18 @@ For production use, additional controls may be required, such as:
 * seccomp/AppArmor policies
 * dedicated sandbox infrastructure
 
-# Project Structure
+## Technology Stack
+
+| Component       | Technology          |
+| --------------- | ------------------- |
+| Agent Framework | Microsoft AutoGen   |
+| Orchestration   | RoundRobinGroupChat |
+| LLM             | OpenAI GPT Models   |
+| Execution       | Docker              |
+| Language        | Python              |
+| Testing         | pytest              |
+
+## Project Structure
 
 ```text
 ai-python-code-builder-executor/
@@ -465,7 +476,7 @@ ai-python-code-builder-executor/
 └── README.md
 ```
 
-# Configuration
+## Configuration
 
 Configuration is stored in `.env`.
 
@@ -490,7 +501,7 @@ Do not commit `.env` to Git.
 Use `.env.example` as the template for other developers.
 
 
-# Installation
+## Installation
 Make sure Docker Desktop is running.
 
 Verify Docker:
@@ -499,7 +510,7 @@ Verify Docker:
 docker run hello-world
 ```
 
-# Running the Application
+## Running the Application
 
 From the project root:
 
@@ -566,7 +577,7 @@ STOP
 
 The important property is that the corrected code requires **another approval**.
 
-# Design Principles
+## Design Principles
 
 ### 1. One responsibility per agent
 
