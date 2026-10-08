@@ -722,15 +722,13 @@ pip install -r requirements.txt
 
 ## Running
 
-Start Docker Desktop.
-
-Run:
+Start docker desktop application and run this command:
 
 ```bash
 python app/main.py
 ```
 
-# Testing
+## Testing
 
 Run the test suite with:
 
