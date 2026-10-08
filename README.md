@@ -406,41 +406,7 @@ Execution ───┤
                               └── maximum → STOP
 ```
 
-# Security Model
 
-The project deliberately separates **code generation** from **code execution**.
-
-```text
-AI-generated Python
-        │
-        ▼
-Human approval
-        │
-        ▼
-Docker container
-        │
-        ▼
-Execution
-```
-
-Docker provides an additional isolation boundary.
-
-However, Docker execution should **not** be considered an absolute security guarantee.
-
-Human approval is a workflow control, not a substitute for sandboxing.
-
-This project is intended as a development and demonstration project, not as a hardened production sandbox for arbitrary hostile code.
-
-For production use, additional controls may be required, such as:
-
-* container resource limits
-* network restrictions
-* read-only filesystems
-* non-root execution
-* CPU and memory limits
-* execution timeouts
-* seccomp/AppArmor policies
-* dedicated sandbox infrastructure
 
 ## Technology Stack
 
@@ -483,7 +449,7 @@ Configuration is stored in `.env`.
 Example:
 
 ```env
-OPENAI_API_KEY=
+OPENAI_API_KEY=your_api_key_here
 
 OPENAI_MODEL=gpt-4o-mini
 CODE_WORK_DIR=working
@@ -494,131 +460,6 @@ CODE_PREVIEW_TAIL_LINES=25
 
 MAX_FAILED_EXECUTIONS=3
 MAX_TURNS=12
-```
-
-Do not commit `.env` to Git.
-
-Use `.env.example` as the template for other developers.
-
-
-## Installation
-Make sure Docker Desktop is running.
-
-Verify Docker:
-
-```powershell
-docker run hello-world
-```
-
-## Running the Application
-
-From the project root:
-
-```powershell
-python .\app\code_builder.py
-```
-
-The application starts with:
-
-```text
-============================================================
-              AI PYTHON CODE BUILDER
-============================================================
-
-What Python program would you like to build?
->
-```
-
-Enter a natural-language Python task.
-
-For example:
-
-```text
-Create a Python program that calculates the factorial of 10.
-```
-
-The assistant generates the code and waits for human approval before execution.
-
-# Example: Successful Correction
-
-A typical workflow looks like:
-
-```text
-User
- │
- │ "Calculate factorial of 10"
- ▼
-Assistant
- │
- │ Generates code
- ▼
-Human approval
- │
- │ Approve
- ▼
-Docker
- │
- │ NameError
- ▼
-Assistant
- │
- │ Fixes code
- ▼
-Human approval
- │
- │ Approve
- ▼
-Docker
- │
- │ 3628800
- ▼
-STOP
-```
-
-The important property is that the corrected code requires **another approval**.
-
-## Design Principles
-
-### 1. One responsibility per agent
-
-`AssistantAgent` generates and fixes code.
-
-`CodeExecutorAgent` handles approval and execution.
-
-### 2. Human approval before every execution
-
-No generated or corrected code is automatically executed.
-
-### 3. Execution is isolated
-
-Approved code runs inside Docker rather than directly in the application's host Python process.
-
-### 4. Explicit termination
-
-The workflow stops after:
-
-* successful execution
-* maximum failed executions
-* the final `MAX_TURNS` safety limit
-
-### 5. Minimal abstraction
-
-The project avoids introducing additional agents or custom infrastructure unless the current requirements actually need them.
-
-## Environment Variables
-
-Create a `.env` file:
-
-```env
-OPENAI_API_KEY=your_api_key_here
-```
-
-Never commit your API key to GitHub.
-
-A `.env.example` file is provided for configuration reference:
-
-```env
-OPENAI_API_KEY=
 ```
 
 ## Installation
@@ -648,6 +489,27 @@ Start docker desktop application and run this command:
 ```bash
 python app/main.py
 ```
+
+The application starts with:
+
+```text
+============================================================
+              AI PYTHON CODE BUILDER
+============================================================
+
+What Python program would you like to build?
+>
+```
+
+Enter a natural-language Python task.
+
+For example:
+
+```text
+Create a Python program that calculates the factorial of 10.
+```
+
+The assistant generates the code and waits for human approval before execution.
 
 ## Testing
 
