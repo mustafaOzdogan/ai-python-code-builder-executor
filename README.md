@@ -79,7 +79,7 @@ Reject      Approve
 The user provides a Python-related task.
 
 ```text
-Write a Python function that calculates factorial.
+Create a Python program that calculates the factorial of 10.
 ```
 
 ### Code Generation
