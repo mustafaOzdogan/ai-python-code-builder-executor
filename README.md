@@ -183,6 +183,189 @@ Code execution was rejected by the user.
 Maximum failed execution count reached: 3.
 ```
 
+## Design Principles
+
+### 1. Separation of concerns
+
+`AssistantAgent` generates and fixes Python code, while `CodeExecutorAgent` handles execution approval and code execution. Docker provides the execution environment.
+
+### 2. Human approval before every execution
+
+No generated or corrected code is executed without explicit human approval. Approval is an execution control, not a substitute for sandboxing.
+
+### 3. Isolated execution
+
+Approved code runs inside Docker rather than directly in the application's host Python process.
+
+### 4. Bounded execution
+
+The workflow terminates when execution succeeds, the maximum number of failed executions is reached, or the overall `MAX_TURNS` limit is reached.
+
+### 5. Minimal abstraction
+
+The project avoids additional agents and custom infrastructure unless they provide a clear benefit to the current workflow.
+
+## Human-in-the-Loop
+
+Human approval is implemented through `CodeExecutorAgent`'s `approval_func`.
+
+```python
+executor = CodeExecutorAgent(
+    name="executor",
+    code_executor=code_executor,
+    approval_func=approval_func,
+)
+```
+
+The approval function receives the code that is about to be executed and allows the user to approve or reject it.
+
+```python
+def approval_func(request) -> ApprovalResponse:
+    ...
+```
+
+```text
+[y] Yes, execute
+[n] No, reject
+```
+
+Every newly generated or corrected version requires fresh approval.
+
+### Why `approval_func` instead of `UserProxyAgent`?
+
+`UserProxyAgent` is useful when a human participates in the agent conversation, such as answering clarification questions or providing additional input.
+
+In this project, the human has a narrower responsibility: approving or rejecting code execution. Using `approval_func` keeps this interaction explicit without introducing another conversational participant.
+
+## Why `CodeExecutorAgent` Has No Model Client
+
+The executor is intentionally created without a model client:
+
+```python
+executor = CodeExecutorAgent(
+    name="executor",
+    code_executor=code_executor,
+    approval_func=approval_func,
+)
+```
+
+The responsibilities are separated as follows:
+
+| Component           | Responsibility                    |
+| ------------------- | --------------------------------- |
+| `AssistantAgent`    | Generate and fix Python code      |
+| `CodeExecutorAgent` | Obtain approval and execute code  |
+| Docker              | Provide the execution environment |
+
+All LLM-based reasoning belongs to `AssistantAgent`. The executor focuses on execution, avoiding duplicated reasoning responsibilities.
+
+## Implementation Notes: AutoGen 0.7.5
+
+### Execution result handling
+
+In this project, `CodeExecutorAgent` runs without a model client. The implementation handles execution results through the executor's `TextMessage` output rather than relying on `CodeExecutionEvent.result.exit_code`.
+
+A small adapter identifies execution failures:
+
+```python
+def is_executor_error(message) -> bool:
+    ...
+```
+
+This provides the success/failure signal required by the current workflow:
+
+```text
+Executor result
+      │
+      ├── Success → Stop
+      │
+      └── Failure → Assistant fixes code
+```
+
+This is a deliberate trade-off: the current implementation uses a lightweight adapter instead of introducing a custom executor solely to expose structured exit codes.
+
+A future implementation could use structured execution events to distinguish ordinary code errors from timeouts, resource exhaustion, or container failures.
+
+## Termination Strategy
+
+The workflow combines successful-execution detection with a maximum-failure limit.
+
+### Successful execution
+
+```python
+successful_execution = FunctionalTermination(
+    is_executor_result_successful
+)
+```
+
+### Maximum failed executions
+
+```python
+max_failures_termination = MaxExecutionFailuresTermination(
+    max_failed_executions=MAX_FAILED_EXECUTIONS
+)
+```
+
+### Combined termination
+
+```python
+termination = (
+    successful_execution
+    | max_failures_termination
+)
+```
+
+The default `MAX_FAILED_EXECUTIONS` value is `3`.
+
+```text
+Execution #1 → Failed
+Execution #2 → Failed
+Execution #3 → Failed
+                  │
+                  ▼
+                 Stop
+```
+
+`MAX_FAILED_EXECUTIONS` and `MAX_TURNS` serve different purposes:
+
+| Limit                   | Responsibility                                |
+| ----------------------- | --------------------------------------------- |
+| `MAX_FAILED_EXECUTIONS` | Limits repeated execution failures            |
+| `MAX_TURNS`             | Provides an overall conversation safety limit |
+
+This combination prevents unbounded correction loops.
+
+## Security Model
+
+The project deliberately separates code generation from code execution.
+
+```text
+AI-generated Python
+        │
+        ▼
+Human approval
+        │
+        ▼
+Docker container
+        │
+        ▼
+Execution result
+```
+
+Docker provides an additional isolation boundary, but it should **not** be considered an absolute security guarantee. Human approval is a workflow control, not a substitute for sandboxing.
+
+This project is intended as a development and demonstration project, not a hardened production sandbox for arbitrary hostile code.
+
+Production environments may require additional controls, including:
+
+* CPU and memory limits
+* Execution timeouts
+* Network restrictions
+* Read-only filesystems
+* Non-root execution
+* Seccomp/AppArmor policies
+* Dedicated sandbox infrastructure
+
 ## Technology Stack
 
 | Component       | Technology          |
