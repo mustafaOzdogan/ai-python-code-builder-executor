@@ -23,9 +23,11 @@ from config import (
 )
 from prompts import PYTHON_ASSISTANT_SYSTEM_MESSAGE
 from termination_conditions import (
-    MaxExecutionFailuresTermination,
-    is_executor_error,
+    ExecutorStatus,
+    get_executor_status,
+    is_executor_result_rejected,
     is_executor_result_successful,
+    MaxExecutionFailuresTermination,
 )
 
 
@@ -138,12 +140,17 @@ async def main() -> None:
         is_executor_result_successful
     )
 
+    rejection_termination = FunctionalTermination(
+        is_executor_result_rejected
+    )
+
     max_failures_termination = MaxExecutionFailuresTermination(
         max_failed_executions=MAX_FAILED_EXECUTIONS
     )
 
     termination = (
         successful_execution
+        | rejection_termination
         | max_failures_termination
     )
 
@@ -172,6 +179,9 @@ async def main() -> None:
         # Stream agent messages so the CLI can display
         # code generation, approval, execution, and retry steps.
         stream = team.run_stream(task=user_request)
+
+        # stream variables
+        executor_status = None
         assistant_code_attempt = 0
 
         async for message in stream:
@@ -184,10 +194,12 @@ async def main() -> None:
                     print("=" * 60)
                     print()
 
-                    if "Functional termination" in message.stop_reason:
-                        print(
-                            "Code execution completed successfully."
-                        )
+                    if executor_status == ExecutorStatus.SUCCESS:
+                        print("Code execution completed successfully.")
+
+                    elif executor_status == ExecutorStatus.REJECTED:
+                        print("Code execution was rejected by the user.")
+
                     else:
                         print(message.stop_reason)
 
@@ -201,7 +213,7 @@ async def main() -> None:
             if source == "user":
                 continue
 
-            if source == "assistant":
+            elif source == "assistant":
                 print("\nASSISTANT")
                 print("-" * 60)
 
@@ -234,7 +246,8 @@ async def main() -> None:
                 print("\nEXECUTOR")
                 print("-" * 60)
 
-                if is_executor_error(message):
+                executor_status = get_executor_status(message)
+                if executor_status == ExecutorStatus.FAILURE:
                     failure_count = (
                         max_failures_termination
                         .failed_execution_count

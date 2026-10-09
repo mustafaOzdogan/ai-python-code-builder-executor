@@ -1,57 +1,81 @@
+from enum import Enum
 from collections.abc import Sequence
 
 from autogen_agentchat.base import (
-    BaseAgentEvent,
-    BaseChatMessage,
     TerminatedException,
     TerminationCondition,
 )
-from autogen_agentchat.messages import StopMessage
+from autogen_agentchat.messages import (
+    BaseAgentEvent,
+    BaseChatMessage,
+    StopMessage
+)
 
 
-def is_executor_error(
+class ExecutorStatus(Enum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    REJECTED = "rejected"
+
+
+def get_executor_status(
     message: BaseAgentEvent | BaseChatMessage,
-) -> bool:
+) -> ExecutorStatus | None:
     """
-    Determine whether an executor message represents
-    a failed code execution.
+    Determine the status of an executor message.
 
     In AutoGen 0.7.5, when CodeExecutorAgent is used
-    without a model_client, the execution result is
-    exposed as a TextMessage.
-
-    Therefore, this PoC detects execution failures
-    from the executor's output message.
+    without a model_client, the execution result is exposed
+    as a TextMessage.
     """
 
     if getattr(message, "source", None) != "executor":
-        return False
+        return None
 
     content = getattr(message, "content", "")
 
     if not isinstance(content, str):
-        return False
+        return None
 
-    return "POSIX exit code:" in content
+    if "Code execution was not approved." in content:
+        return ExecutorStatus.REJECTED
+
+    if "POSIX exit code:" in content:
+        return ExecutorStatus.FAILURE
+
+    return ExecutorStatus.SUCCESS
 
 
 def is_executor_result_successful(
     messages: Sequence[BaseAgentEvent | BaseChatMessage],
 ) -> bool:
     """
-    Return True when the latest executor result
-    represents a successful execution.
+    Return True when the latest executor result is successful.
     """
 
     if not messages:
         return False
 
-    last_message = messages[-1]
+    return (
+        get_executor_status(messages[-1])
+        == ExecutorStatus.SUCCESS
+    )
 
-    if getattr(last_message, "source", None) != "executor":
+
+def is_executor_result_rejected(
+    messages: Sequence[BaseAgentEvent | BaseChatMessage],
+) -> bool:
+    """
+    Return True when the latest executor result was rejected.
+    """
+
+    if not messages:
         return False
 
-    return not is_executor_error(last_message)
+    return (
+        get_executor_status(messages[-1])
+        == ExecutorStatus.REJECTED
+    )
 
 
 class MaxExecutionFailuresTermination(TerminationCondition):
@@ -86,9 +110,9 @@ class MaxExecutionFailuresTermination(TerminationCondition):
         if not messages:
             return None
 
-        last_message = messages[-1]
+        status = get_executor_status(messages[-1])
 
-        if not is_executor_error(last_message):
+        if status != ExecutorStatus.FAILURE:
             return None
 
         self.failed_execution_count += 1
