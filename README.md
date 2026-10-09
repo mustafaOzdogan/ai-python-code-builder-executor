@@ -442,7 +442,7 @@ pip install -r requirements.txt
 
 ## Running
 
-Start docker desktop application and run this command:
+Start Docker Desktop, then run:
 
 ```bash
 python app/main.py
