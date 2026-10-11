@@ -14,7 +14,7 @@ class TestMaxExecutionFailuresTermination(
         # First execution failure
         error_1 = TextMessage(
             source="executor",
-            content="The script ran, then exited with an error",
+            content="POSIX exit code: 1",
         )
 
         result = await condition([error_1])
@@ -25,7 +25,7 @@ class TestMaxExecutionFailuresTermination(
         # Second execution failure
         error_2 = TextMessage(
             source="executor",
-            content="The script ran, then exited with an error",
+            content="POSIX exit code: 1",
         )
 
         result = await condition([error_2])
@@ -36,7 +36,7 @@ class TestMaxExecutionFailuresTermination(
         # Third execution failure should terminate
         error_3 = TextMessage(
             source="executor",
-            content="The script ran, then exited with an error",
+            content="POSIX exit code: 1",
         )
 
         result = await condition([error_3])
@@ -52,7 +52,7 @@ class TestMaxExecutionFailuresTermination(
 
         message = TextMessage(
             source="assistant",
-            content="The script ran, then exited with an error",
+            content="POSIX exit code: 1",
         )
 
         result = await condition([message])
@@ -67,7 +67,7 @@ class TestMaxExecutionFailuresTermination(
 
         error = TextMessage(
             source="executor",
-            content="The script ran, then exited with an error",
+            content="POSIX exit code: 1",
         )
 
         await condition([error])
