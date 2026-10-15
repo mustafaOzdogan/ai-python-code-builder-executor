@@ -27,6 +27,7 @@ from termination_conditions import (
     get_executor_status,
     is_executor_result_rejected,
     is_executor_result_successful,
+    is_executor_result_dependency_error,
     MaxExecutionFailuresTermination,
 )
 
@@ -134,14 +135,17 @@ async def main() -> None:
         approval_func=approval_func,
     )
 
-    # Stop when execution succeeds or the maximum number
-    # of failed executions is reached.
+    # termination conditions for the team chat
     successful_execution = FunctionalTermination(
         is_executor_result_successful
     )
 
     rejection_termination = FunctionalTermination(
         is_executor_result_rejected
+    )
+
+    dependency_termination = FunctionalTermination(
+            is_executor_result_dependency_error
     )
 
     max_failures_termination = MaxExecutionFailuresTermination(
@@ -151,6 +155,7 @@ async def main() -> None:
     termination = (
         successful_execution
         | rejection_termination
+        | dependency_termination
         | max_failures_termination
     )
 
@@ -199,6 +204,17 @@ async def main() -> None:
 
                     elif executor_status == ExecutorStatus.REJECTED:
                         print("Code execution was rejected by the user.")
+
+                    elif executor_status == ExecutorStatus.DEPENDENCY_ERROR:
+                        print(
+                            "Execution stopped because a required dependency "
+                            "is missing or could not be loaded."
+                        )
+                        print(
+                            "The original program was not replaced with a "
+                            "placeholder. Resolve the dependency in the "
+                            "Docker environment before retrying."
+                        )
 
                     else:
                         print(message.stop_reason)

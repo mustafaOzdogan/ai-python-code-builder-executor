@@ -16,6 +16,7 @@ class ExecutorStatus(Enum):
     SUCCESS = "success"
     FAILURE = "failure"
     REJECTED = "rejected"
+    DEPENDENCY_ERROR = "dependency_error"
 
 
 def get_executor_status(
@@ -40,10 +41,22 @@ def get_executor_status(
     if "Code execution was not approved." in content:
         return ExecutorStatus.REJECTED
 
-    if "POSIX exit code:" in content:
-        return ExecutorStatus.FAILURE
+    if "POSIX exit code:" not in content:
+        return ExecutorStatus.SUCCESS
 
-    return ExecutorStatus.SUCCESS
+    # Detect missing Python dependencies before classifying
+    # the result as a regular execution failure.
+    if (
+        "ModuleNotFoundError" in content
+        or "ImportError" in content
+    ) and (
+        "No module named" in content
+        or "cannot import name" in content
+        or "DLL load failed" in content
+    ):
+        return ExecutorStatus.DEPENDENCY_ERROR
+
+    return ExecutorStatus.FAILURE
 
 
 def is_executor_result_successful(
@@ -75,6 +88,23 @@ def is_executor_result_rejected(
     return (
         get_executor_status(messages[-1])
         == ExecutorStatus.REJECTED
+    )
+
+
+def is_executor_result_dependency_error(
+    messages: Sequence[BaseAgentEvent | BaseChatMessage],
+) -> bool:
+    """
+    Return True when the latest executor result indicates
+    a missing dependency or a dependency loading error.
+    """
+
+    if not messages:
+        return False
+
+    return (
+        get_executor_status(messages[-1])
+        == ExecutorStatus.DEPENDENCY_ERROR
     )
 
 
