@@ -262,40 +262,41 @@ All LLM-based reasoning belongs to `AssistantAgent`. The executor focuses on exe
 
 ## Implementation Notes: AutoGen 0.7.5
 
-### Execution result handling
+### Execution Result Classification
 
-In this project, `CodeExecutorAgent` runs without a model client. The implementation handles execution results through the executor's `TextMessage` output rather than relying on `CodeExecutionEvent.result.exit_code`.
+In AutoGen 0.7.5, the `CodeExecutorAgent` is used without a model client, so the workflow interprets the executor's `TextMessage` output rather than relying on `CodeExecutionEvent.result.exit_code`.
 
-A small adapter identifies execution failures:
+A centralized `get_executor_status()` function classifies executor messages into three statuses:
 
-```python
-def is_executor_error(message) -> bool:
-    ...
-```
+- `SUCCESS`: Execution completed successfully.
+- `FAILURE`: Execution failed and may be retried.
+- `REJECTED`: The user declined execution.
 
-This provides the success/failure signal required by the current workflow:
+The `ExecutorStatus` enum provides a single source of truth for status classification. Termination conditions and failure counting use this classification rather than independently interpreting executor messages.
 
-```text
-Executor result
-      │
-      ├── Success → Stop
-      │
-      └── Failure → Assistant fixes code
-```
-
-This is a deliberate trade-off: the current implementation uses a lightweight adapter instead of introducing a custom executor solely to expose structured exit codes.
-
-A future implementation could use structured execution events to distinguish ordinary code errors from timeouts, resource exhaustion, or container failures.
+This is a lightweight implementation trade-off. Because status detection relies on message text, it is less robust than consuming structured execution results. Changes in output formatting or unhandled error types may require further adaptation.
 
 ## Termination Strategy
 
-The workflow combines successful-execution detection with a maximum-failure limit.
+The workflow combines three termination conditions:
+
+- **Successful execution:** Stops the workflow when the generated code executes successfully.
+- **User rejection:** Stops the workflow when the user declines code execution.
+- **Maximum failure limit:** Stops the workflow after the configured number of failed execution attempts is reached.
 
 ### Successful execution
 
 ```python
 successful_execution = FunctionalTermination(
     is_executor_result_successful
+)
+```
+
+### Rejected execution
+
+```python
+rejection_termination = FunctionalTermination(
+    is_executor_result_rejected
 )
 ```
 
@@ -312,6 +313,7 @@ max_failures_termination = MaxExecutionFailuresTermination(
 ```python
 termination = (
     successful_execution
+    | rejection_termination
     | max_failures_termination
 )
 ```
@@ -446,7 +448,7 @@ pip install -r requirements.txt
 Start Docker Desktop, then run:
 
 ```bash
-python app/main.py
+python app/code_builder.py
 ```
 
 The application starts with:
@@ -499,6 +501,7 @@ The tests cover the custom execution-failure termination logic.
 * Human approval is required
 * Generated code quality depends on the LLM
 * Docker is not a complete security boundary
+* Generated code artifacts from failed attempts may remain in the working directory; automatic cleanup is not currently implemented.
 
 ## Future Improvements
 
