@@ -107,6 +107,7 @@ Large generated programs are truncated in the CLI preview for readability, while
 
 Generated Python code:
 ------------------------------------------------------------
+# filename: calculate_factorial.py
 number = 10
 
 def factorial(n):
@@ -491,7 +492,7 @@ The tests cover the custom execution-failure termination logic.
 * Retry strategies
 * Termination conditions
 * Separation of concerns
-  
+
 ## Limitations
 
 * The workflow currently supports Python only
