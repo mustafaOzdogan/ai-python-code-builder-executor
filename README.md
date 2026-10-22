@@ -509,7 +509,12 @@ The tests cover the custom execution-failure termination logic.
 * Human approval is required
 * Generated code quality depends on the LLM
 * Docker is not a complete security boundary
+* The Docker runtime uses its configured environment; specialized dependencies may require additional setup.
+* Missing dependencies are detected, but packages are not installed automatically.
+* Interactive graphical applications are not currently presented through a dedicated GUI or browser interface.
 * Generated code artifacts from failed attempts may remain in the working directory; automatic cleanup is not currently implemented.
+
+This project is a proof of concept for controlled AI-generated code execution, not a fully managed runtime environment for every Python application.
 
 ## Future Improvements
 
