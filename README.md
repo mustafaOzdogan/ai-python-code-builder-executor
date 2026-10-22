@@ -34,6 +34,7 @@ The goal is not simply code generation, but designing an iterative execution wor
 
 ## Architecture
 ```mermaid
+%%{init: {"theme": "default", "themeVariables": {"fontSize": "12px"}}}%%
 flowchart TB
     A["User Request"] --> B["AssistantAgent"]
     B --> C["Human Approval"]
