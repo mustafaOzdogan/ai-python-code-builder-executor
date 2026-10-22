@@ -34,34 +34,18 @@ The goal is not simply code generation, but designing an iterative execution wor
 
 ## Architecture
 
-```text
-  User Request
-       │
-       ▼
- AssistantAgent
-       │
-       ▼
- approval_func
-       │
-  ┌────┴───────┐
-  │            │
-Reject      Approve
-  │            │
-  ▼            ▼
- Stop   CodeExecutorAgent
-               │
-               ▼
-        Docker Container
-               │
-       ┌───────┴────────┐
-       │                │
-    Success           Failure
-       │                │
-       ▼                ▼
-     Finish     AssistantAgent
-                        │
-                        └──────► Generate Fix
-```
+flowchart TD
+    A[User Request] --> B[AssistantAgent]
+    B --> C[Human Approval]
+    C -->|Reject| D[Stop: User Rejected]
+    C -->|Approve| E[CodeExecutorAgent]
+    E --> F[Docker Container]
+    F -->|Success| G[Stop: Success]
+    F -->|Ordinary Execution Failure| H[AssistantAgent: Analyze and Fix]
+    H --> B
+    F -->|Dependency Error| I[Stop: Dependency Missing]
+    H --> C
+
 
 ### Agent Responsibilities
 
@@ -315,7 +299,7 @@ rejection_termination = FunctionalTermination(
 )
 ```
 
-### Dependency Missing execution
+### Dependency missing execution
 
 ```python
 dependency_termination = FunctionalTermination(
