@@ -259,11 +259,13 @@ All LLM-based reasoning belongs to `AssistantAgent`. The executor focuses on exe
 
 In AutoGen 0.7.5, the `CodeExecutorAgent` is used without a model client, so the workflow interprets the executor's `TextMessage` output rather than relying on `CodeExecutionEvent.result.exit_code`.
 
-A centralized `get_executor_status()` function classifies executor messages into three statuses:
+A centralized `get_executor_status()` function classifies executor messages into four statuses:
 
 - `SUCCESS`: Execution completed successfully.
 - `FAILURE`: Execution failed and may be retried.
 - `REJECTED`: The user declined execution.
+- `DEPENDENCY_ERROR`: A required dependency is missing
+  or could not be loaded.
 
 The `ExecutorStatus` enum provides a single source of truth for status classification. Termination conditions and failure counting use this classification rather than independently interpreting executor messages.
 
