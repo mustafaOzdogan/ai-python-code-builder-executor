@@ -175,6 +175,15 @@ Code execution completed successfully.
 
 Code execution was rejected by the user.
 ```
+* Dependency missing
+```text
+============================================================
+                    TERMINATION
+============================================================
+
+Execution stopped because a required dependency is missing or could not be loaded.
+The original program was not replaced with a placeholder. Resolve the dependency in the Docker environment before retrying.
+```
 * Maximum failure count is reached
 ```text
 ============================================================
@@ -278,11 +287,17 @@ This is a lightweight implementation trade-off. Because status detection relies 
 
 ## Termination Strategy
 
-The workflow combines three termination conditions:
+The workflow terminates when one of the following conditions is met:
 
-- **Successful execution:** Stops the workflow when the generated code executes successfully.
-- **User rejection:** Stops the workflow when the user declines code execution.
-- **Maximum failure limit:** Stops the workflow after the configured number of failed execution attempts is reached.
+- **Successful execution:** The generated Python code executes successfully.
+- **User rejection:** The user declines to approve code execution.
+- **Dependency error:** A missing or unloadable dependency is detected, and the workflow stops without automatically installing packages.
+- **Maximum failed executions:** The configured limit of consecutive failed execution attempts is reached.
+- **Maximum turns:** The overall conversation turn limit is reached.
+
+The default `MAX_FAILED_EXECUTIONS` value is `3`.
+
+Dependency errors are handled separately from ordinary code execution failures. The current implementation does not automatically install missing dependencies or provision specialized runtime environments.
 
 ### Successful execution
 
@@ -300,6 +315,14 @@ rejection_termination = FunctionalTermination(
 )
 ```
 
+### Dependency Missing execution
+
+```python
+dependency_termination = FunctionalTermination(
+    is_executor_result_dependency_error
+)
+```
+
 ### Maximum failed executions
 
 ```python
@@ -314,6 +337,7 @@ max_failures_termination = MaxExecutionFailuresTermination(
 termination = (
     successful_execution
     | rejection_termination
+    | dependency_termination
     | max_failures_termination
 )
 ```
