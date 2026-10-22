@@ -33,7 +33,7 @@ The goal is not simply code generation, but designing an iterative execution wor
 * ✅ Unit tests
 
 ## Architecture
-
+```mermaid
 flowchart TD
     A[User Request] --> B[AssistantAgent]
     B --> C[Human Approval]
@@ -45,7 +45,7 @@ flowchart TD
     H --> B
     F -->|Dependency Error| I[Stop: Dependency Missing]
     H --> C
-
+```
 
 ### Agent Responsibilities
 
