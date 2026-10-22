@@ -490,7 +490,13 @@ Run the test suite with:
 python -m pytest
 ```
 
-The tests cover the custom execution-failure termination logic.
+The unit tests cover executor result classification and the
+custom termination logic, including success, ordinary failures,
+user rejection, dependency errors, failure limits, and reset behavior.
+
+These tests validate the classification and termination components
+independently; they do not constitute a full end-to-end test of
+the OpenAI model, Docker runtime, and interactive approval workflow.
 
 ## Key Agentic AI Concepts
 
