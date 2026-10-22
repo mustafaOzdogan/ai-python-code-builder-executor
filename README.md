@@ -34,17 +34,16 @@ The goal is not simply code generation, but designing an iterative execution wor
 
 ## Architecture
 ```mermaid
-flowchart TD
-    A[User Request] --> B[AssistantAgent]
-    B --> C[Human Approval]
-    C -->|Reject| D[Stop: User Rejected]
-    C -->|Approve| E[CodeExecutorAgent]
-    E --> F[Docker Container]
-    F -->|Success| G[Stop: Success]
-    F -->|Ordinary Execution Failure| H[AssistantAgent: Analyze and Fix]
-    H --> B
-    F -->|Dependency Error| I[Stop: Dependency Missing]
-    H --> C
+flowchart TB
+    A["User Request"] --> B["AssistantAgent"]
+    B --> C["Human Approval"]
+    C -- Reject --> D["Stop: User Rejected"]
+    C -- Approve --> E["CodeExecutorAgent"]
+    E --> F["Docker Container"]
+    F -- Success --> G["Stop: Success"]
+    H["Analyze and Fix"] --> B
+    F -- Dependency Error --> I["Stop: Dependency Missing"]
+    F -- Ordinary Execution Failure --> H
 ```
 
 ### Agent Responsibilities
